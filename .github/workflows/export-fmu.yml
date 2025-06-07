@@ -26,9 +26,20 @@ jobs:
         echo "Environment PATH: $PATH"
         which omc || echo "omc not found"
 
-    - name: Build FMU (adjust path to omc once known)
+    - name: Locate and Run omc
       run: |
-        export PATH="/usr/local/bin:$PATH"  # Update this path after debug
+        # Find the actual path to omc
+        OMC_PATH=$(sudo find / -type f -name "omc" 2>/dev/null | grep -m1 "bin/omc")
+        if [ -z "$OMC_PATH" ]; then
+          echo "❌ omc not found"
+          exit 1
+        fi
+        echo "✅ omc found at: $OMC_PATH"
+
+        # Add to PATH
+        export PATH="$(dirname $OMC_PATH):$PATH"
+
+        # Confirm and build FMU
         omc --version
         omc --emit-fmu=GridTiedMicrogridRLC.mo
 
