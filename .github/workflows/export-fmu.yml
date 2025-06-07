@@ -1,4 +1,4 @@
-name: Build FMU using OpenModelica (No Docker)
+name: Build FMU using OpenModelica (Manual Install)
 
 on:
   push:
@@ -7,19 +7,17 @@ on:
 
 jobs:
   build-fmu:
-    runs-on: ubuntu-22.04  # ✅ use Ubuntu 22.04 (LTS) for compatibility
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install OpenModelica
+    - name: Install OpenModelica (manual install)
       run: |
         sudo apt update
-        sudo apt install -y software-properties-common
-        sudo add-apt-repository -y ppa:openmodelica/ppa
-        sudo apt update
-        sudo apt install -y openmodelica
+        wget https://build.openmodelica.org/omc/builds/linux/releases/1.22.2/ubuntu-22.04/openmodelica_1.22.2-1_amd64.deb
+        sudo apt install -y ./openmodelica_1.22.2-1_amd64.deb
 
     - name: Build FMU
       run: |
