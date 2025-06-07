@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-fmu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # ✅ use Ubuntu 22.04 (LTS) for compatibility
 
     steps:
     - name: Checkout repository
