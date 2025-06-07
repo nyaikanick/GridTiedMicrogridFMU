@@ -1,4 +1,4 @@
-name: Build FMU using OpenModelica (Manual Install)
+name: Build FMU using OpenModelica (Nightly Install)
 
 on:
   push:
@@ -16,8 +16,8 @@ jobs:
     - name: Install OpenModelica (manual install)
       run: |
         sudo apt update
-        wget https://build.openmodelica.org/omc/builds/linux/releases/1.22.2/ubuntu-22.04/openmodelica_1.22.2-1_amd64.deb
-        sudo apt install -y ./openmodelica_1.22.2-1_amd64.deb
+        wget https://build.openmodelica.org/omc/builds/linux/nightly-builds/ubuntu-22.04/openmodelica_1.22.2~dev-1_amd64.deb
+        sudo apt install -y ./openmodelica_1.22.2~dev-1_amd64.deb
 
     - name: Build FMU
       run: |
