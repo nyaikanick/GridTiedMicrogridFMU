@@ -1,4 +1,4 @@
-name: Build FMU using public OMC image
+name: Build FMU
 
 on:
   push:
@@ -13,13 +13,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Pull public OpenModelica image
-      run: docker pull openmodelica/omc
+    - name: Pull working OpenModelica image
+      run: docker pull openmodelica/openmodelica:v1.20.0
 
     - name: Generate FMU
       run: |
-        docker run --rm -v ${{ github.workspace }}:/mnt openmodelica/omc \
-          omc --emit-fmu=/mnt/GridTiedMicrogridRLC.mo
+        docker run --rm -v ${{ github.workspace }}:/mnt openmodelica/openmodelica:v1.20.0 \
+          omc --emit-fmu /mnt/GridTiedMicrogridRLC.mo
 
     - name: Upload FMU
       uses: actions/upload-artifact@v4
