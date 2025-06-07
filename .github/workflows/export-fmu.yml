@@ -1,4 +1,4 @@
-name: Build FMU using OpenModelica Script
+name: Build FMU using OpenModelica
 
 on:
   push:
@@ -21,6 +21,8 @@ jobs:
 
     - name: Build FMU
       run: |
+        export PATH="/usr/lib/omc/bin:$PATH"
+        which omc
         omc --version
         omc --emit-fmu=GridTiedMicrogridRLC.mo
 
