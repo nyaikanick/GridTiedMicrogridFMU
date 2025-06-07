@@ -18,7 +18,7 @@ jobs:
 
     - name: Generate FMU using Docker
       run: |
-        docker run --rm -v ${{ github.workspace }}:/mnt openmodelica/openmodelica \
+        docker run --rm -v ${{ github.workspace }}:/mnt openmodelica/openmodelica:v1.18.0-minimal \
           omc --simCodeTarget=Cpp --emit-fmu /mnt/GridTiedMicrogridRLC.mo
 
     - name: Upload FMU as artifact
