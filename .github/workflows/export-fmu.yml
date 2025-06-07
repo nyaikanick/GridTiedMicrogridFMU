@@ -19,28 +19,10 @@ jobs:
         sudo apt install -y curl
         curl -fsSL https://raw.githubusercontent.com/OpenModelica/OpenModelica/master/scripts/install-linux.sh | bash
 
-    - name: Debug omc location
+    - name: Set PATH and Build FMU
       run: |
-        echo "Searching for omc binary..."
-        sudo find / -type f -name "omc" 2>/dev/null
-        echo "Environment PATH: $PATH"
-        which omc || echo "omc not found"
-
-    - name: Locate and Run omc
-      run: |
-        # Find the actual path to omc
-        OMC_PATH=$(sudo find / -type f -name "omc" 2>/dev/null | grep -m1 "bin/omc")
-        if [ -z "$OMC_PATH" ]; then
-          echo "❌ omc not found"
-          exit 1
-        fi
-        echo "✅ omc found at: $OMC_PATH"
-
-        # Add to PATH
-        export PATH="$(dirname $OMC_PATH):$PATH"
-
-        # Confirm and build FMU
-        omc --version
+        export PATH="/usr/bin:/usr/local/bin:/usr/lib/x86_64-linux-gnu/openmodelica/bin:$PATH"
+        omc --version || { echo "❌ omc not found in expected locations"; exit 1; }
         omc --emit-fmu=GridTiedMicrogridRLC.mo
 
     - name: Upload FMU
