@@ -13,8 +13,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Pull OpenModelica Docker image (v1.25.0)
-      run: docker pull openmodelica/openmodelica:v1.25.0
+    - name: Pull OpenModelica Docker image (v1.22.2)
+      run: docker pull openmodelica/openmodelica:v1.22.2
 
     - name: Generate FMU using Docker
       run: |
