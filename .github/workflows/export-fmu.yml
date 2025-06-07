@@ -13,16 +13,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install OpenModelica (v1.22.2 .deb)
+    - name: Install OpenModelica from official script
       run: |
         sudo apt update
-        wget https://build.openmodelica.org/omc/builds/linux/releases/1.22.2/ubuntu-22.04/openmodelica_1.22.2-1_amd64.deb
-        sudo apt install -y ./openmodelica_1.22.2-1_amd64.deb
+        sudo apt install -y curl
+        curl -fsSL https://raw.githubusercontent.com/OpenModelica/OpenModelica/master/scripts/install-linux.sh | bash
 
-    - name: Confirm omc location and Build FMU
+    - name: Set PATH and Build FMU
       run: |
-        which omc || { echo "❌ omc still not found"; exit 1; }
-        omc --version
+        export PATH="/usr/bin:/usr/local/bin:/usr/lib/x86_64-linux-gnu/openmodelica/bin:$PATH"
+        omc --version || { echo "❌ omc not found in expected locations"; exit 1; }
         omc --emit-fmu=GridTiedMicrogridRLC.mo
 
     - name: Upload FMU
