@@ -14,11 +14,11 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Pull OpenModelica from GitHub Container Registry
-      run: docker pull ghcr.io/openmodelica/openmodelica:v1.22.2
+      run: docker pull ghcr.io/openmodelica/openmodelica:v1.18.0-minimal
 
     - name: Generate FMU
       run: |
-        docker run --rm -v ${{ github.workspace }}:/mnt ghcr.io/openmodelica/openmodelica:v1.22.2 \
+        docker run --rm -v ${{ github.workspace }}:/mnt ghcr.io/openmodelica/openmodelica:v1.18.0-minimal\
           omc --emit-fmu /mnt/GridTiedMicrogridRLC.mo
 
     - name: Upload FMU
