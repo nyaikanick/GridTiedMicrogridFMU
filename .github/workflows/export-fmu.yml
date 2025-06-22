@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y software-properties-common wget gnupg2 curl
+          sudo apt-get install -y software-properties-common wget gnupg2 curl unzip
 
       - name: Add OpenModelica repository
         run: |
@@ -37,21 +37,31 @@ jobs:
 
       - name: Install Modelica Standard Library
         run: |
+          # Create library directory
+          mkdir -p /home/runner/.openmodelica/libraries
           # Try installing Modelica 3.2.3 using omc
-          omc -s +showErrorMessages 'installPackage(Modelica, "3.2.3", exactMatch=true)' > install_modelica.log 2>&1 || echo "Failed to install Modelica 3.2.3, trying fallback"
+          echo 'installPackage(Modelica, "3.2.3", exactMatch=true);' > install_modelica.mos
+          omc --silent +showErrorMessages install_modelica.mos > install_modelica.log 2>&1 || echo "Failed to install Modelica 3.2.3, trying fallback"
           cat install_modelica.log
           # Fallback: Try installing default Modelica version
-          if ! grep -q "Successfully installed" install_modelica.log; then
-            omc -s +showErrorMessages 'installPackage(Modelica)' >> install_modelica.log 2>&1 || echo "Failed to install default Modelica version"
+          if ! grep -q "true" install_modelica.log; then
+            echo 'installPackage(Modelica);' > install_modelica_default.mos
+            omc --silent +showErrorMessages install_modelica_default.mos >> install_modelica.log 2>&1 || echo "Failed to install default Modelica version"
             cat install_modelica.log
           fi
-          # Fallback: Manually download Modelica 3.2.3 if installPackage fails
-          if ! grep -q "Successfully installed" install_modelica.log; then
+          # Fallback: Manually download Modelica 3.2.3
+          if ! grep -q "true" install_modelica.log; then
             echo "Manually downloading Modelica 3.2.3"
-            curl -L -o modelica-3.2.3.zip https://github.com/modelica/ModelicaStandardLibrary/releases/download/v3.2.3/Modelica-3.2.3.zip
-            unzip modelica-3.2.3.zip -d /home/runner/.openmodelica/libraries/
-            mv /home/runner/.openmodelica/libraries/Modelica-3.2.3 /home/runner/.openmodelica/libraries/Modelica
-            ls -l /home/runner/.openmodelica/libraries/
+            curl -L -o modelica-3.2.3.zip https://github.com/modelica/ModelicaStandardLibrary/releases/download/v3.2.3/Modelica%203.2.3.zip
+            # Verify download
+            if [ -s modelica-3.2.3.zip ]; then
+              unzip modelica-3.2.3.zip -d /home/runner/.openmodelica/libraries/
+              mv /home/runner/.openmodelica/libraries/Modelica\ 3.2.3 /home/runner/.openmodelica/libraries/Modelica
+              ls -l /home/runner/.openmodelica/libraries/
+            else
+              echo "Download failed: modelica-3.2.3.zip is empty or invalid"
+              exit 1
+            fi
           fi
           # Verify Modelica library availability
           omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica > modelica_paths.txt 2>&1
