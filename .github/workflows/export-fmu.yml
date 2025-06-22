@@ -37,6 +37,7 @@ jobs:
 
       - name: Install Modelica Standard Library
         run: |
+          echo "Starting Modelica library installation"
           # Create library directory
           mkdir -p /home/runner/.openmodelica/libraries
           # Install Modelica 3.2.3 using omc
@@ -55,12 +56,14 @@ jobs:
           cat library_contents.txt
           # Verify Modelica library availability
           export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
-          echo "MODELICAPATH=$MODELICAPATH" >> modelica_paths.txt
+          echo "MODELICAPATH=$MODELICAPATH" > modelica_paths.txt
           omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica >> modelica_paths.txt 2>&1
           cat modelica_paths.txt
+          echo "Completed Modelica library installation"
 
       - name: Verify installation and build FMU
         run: |
+          echo "Starting model validation and FMU generation"
           # Verify OpenModelica installation
           which omc
           omc --version
@@ -77,6 +80,7 @@ jobs:
           cat fmu_build.log
           # Verify FMU was created
           ls -l GridTiedMicrogridRLC.fmu || echo "FMU file not found"
+          echo "Completed model validation and FMU generation"
 
       - name: Upload logs for debugging
         if: always()
