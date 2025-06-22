@@ -15,28 +15,33 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y software-properties-common wget gnupg2
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common wget gnupg2
 
       - name: Add OpenModelica repository
         run: |
           # Add OpenModelica GPG key
-          wget -q http://build.openmodelica.org/apt/openmodelica.asc -O - | sudo apt-key add -
+          wget -q http://build.openmodelica.org/apt/openmodelica.asc -O - | sudo gpg --dearmor -o /usr/share/keyrings/openmodelica-keyring.gpg
           # Add OpenModelica stable repository for Ubuntu 22.04
-          sudo sh -c 'echo "deb http://build.openmodelica.org/apt jammy stable" > /etc/apt/sources.list.d/openmodelica.list'
-          sudo apt update
+          echo "deb [signed-by=/usr/share/keyrings/openmodelica-keyring.gpg] http://build.openmodelica.org/apt jammy stable" | sudo tee /etc/apt/sources.list.d/openmodelica.list
+          sudo apt-get update
 
       - name: Install OpenModelica
         run: |
-          sudo apt install -y openmodelica
-          # Install additional libraries if needed
-          sudo apt install -y omlib-modelica-3.2.3
+          sudo apt-get install -y openmodelica
+          # Check available Modelica libraries
+          apt-cache search omlib
+          # Install all available OpenModelica libraries (optional, if specific libraries are needed)
+          sudo apt-get install -y 'omlib-*' || echo "Some libraries may not be available, proceeding..."
 
       - name: Verify installation and build FMU
         run: |
           which omc
           omc --version
-          omc +s GridTiedMicrogridRLC.mo -f GridTiedMicrogridRLC.fmu
+          # Ensure the .mo file exists
+          ls -l GridTiedMicrogridRLC.mo
+          # Build FMU without simulation
+          omc --simCodeTarget=FMU GridTiedMicrogridRLC.mo
 
       - name: Upload FMU
         uses: actions/upload-artifact@v4
