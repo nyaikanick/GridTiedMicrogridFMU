@@ -30,26 +30,51 @@ jobs:
         run: |
           sudo apt-get install -y openmodelica
           # Check available Modelica libraries
-          apt-cache search omlib
+          apt-cache search omlib > omlib_list.txt
+          cat omlib_list.txt
           # Install all available OpenModelica libraries
           sudo apt-get install -y 'omlib-*' || echo "Some libraries may not be available, proceeding..."
 
+      - name: Install Modelica Standard Library 3.2.3
+        run: |
+          # Install Modelica 3.2.3 using omc
+          omc -s +showErrorMessages 'installPackage(Modelica, "3.2.3", exactMatch=true)' > install_modelica.log 2>&1
+          cat install_modelica.log
+          # Verify Modelica library availability
+          omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica > modelica_paths.txt
+          cat modelica_paths.txt
+
       - name: Verify installation and build FMU
         run: |
+          # Verify OpenModelica installation
           which omc
           omc --version
           # Ensure the .mo file exists
           ls -l GridTiedMicrogridRLC.mo
-          # Check model file for errors
-          omc +showErrorMessages GridTiedMicrogridRLC.mo || echo "Model check failed, see errors above"
-          # Build FMU with detailed error output
-          omc -f GridTiedMicrogridRLC.fmu +showErrorMessages GridTiedMicrogridRLC.mo || echo "FMU generation failed, see errors above"
+          # Validate model file
+          omc +showErrorMessages GridTiedMicrogridRLC.mo > model_check.log 2>&1 || echo "Model validation failed, see model_check.log"
+          cat model_check.log
+          # Build FMU with detailed logging
+          omc -f GridTiedMicrogridRLC.fmu +showErrorMessages GridTiedMicrogridRLC.mo > fmu_build.log 2>&1 || echo "FMU generation failed, see fmu_build.log"
+          cat fmu_build.log
           # Verify FMU was created
           ls -l GridTiedMicrogridRLC.fmu || echo "FMU file not found"
 
-      - name: Upload FMU
+      - name: Upload logs for debugging
+        if: always()
         uses: actions/upload-artifact@v4
+        with:
+          name: Debug-Logs
+          path: |
+            omlib_list.txt
+            modelica_paths.txt
+            install_modelica.log
+            model_check.log
+            fmu_build.log
+
+      - name: Upload FMU
         if: success()
+        uses: actions/upload-artifact@v4
         with:
           name: GridTiedMicrogridRLC-FMU
           path: GridTiedMicrogridRLC.fmu
