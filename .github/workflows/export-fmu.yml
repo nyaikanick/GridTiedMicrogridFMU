@@ -40,8 +40,8 @@ jobs:
           omc --version
           # Ensure the .mo file exists
           ls -l GridTiedMicrogridRLC.mo
-          # Build FMU without simulation
-          omc --simCodeTarget=FMU GridTiedMicrogridRLC.mo
+          # Build FMU (Co-Simulation by default)
+          omc -f GridTiedMicrogridRLC.fmu GridTiedMicrogridRLC.mo
 
       - name: Upload FMU
         uses: actions/upload-artifact@v4
