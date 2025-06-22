@@ -13,11 +13,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install OpenModelica from official script
+    - name: Install OpenModelica (nightly build)
       run: |
         sudo apt update
-        sudo apt install -y curl
-        curl -fsSL https://raw.githubusercontent.com/OpenModelica/OpenModelica/master/scripts/install-linux.sh | bash
+        wget https://build.openmodelica.org/omc/builds/linux/nightly-builds/ubuntu-22.04/openmodelica_1.22.3~dev-1_amd64.deb
+        sudo apt install -y ./openmodelica_1.22.3~dev-1_amd64.deb
 
     - name: Set PATH and Build FMU
       run: |
