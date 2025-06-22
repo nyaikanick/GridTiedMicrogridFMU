@@ -65,6 +65,7 @@ jobs:
           omc --version
           # Set MODELICAPATH
           export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
+          echo "MODELICAPATH=$MODELICAPATH"
           # Ensure the .mo file exists
           ls -l GridTiedMicrogridRLC.mo
           # Validate model file
