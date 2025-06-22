@@ -47,18 +47,12 @@ jobs:
           if grep -q "true" install_modelica.log; then
             echo "Modelica 3.2.3 installed successfully"
           else
-            echo "Failed to install Modelica 3.2.3, trying fallback"
-            # Fallback: Manually download Modelica 3.2.3
-            curl -L -o modelica-3.2.3.zip https://github.com/modelica/ModelicaStandardLibrary/releases/download/v3.2.3/Modelica%203.2.3.zip
-            if [ -s modelica-3.2.3.zip ]; then
-              unzip modelica-3.2.3.zip -d /home/runner/.openmodelica/libraries/
-              mv /home/runner/.openmodelica/libraries/Modelica\ 3.2.3 /home/runner/.openmodelica/libraries/Modelica
-              ls -l /home/runner/.openmodelica/libraries/
-            else
-              echo "Download failed: modelica-3.2.3.zip is empty or invalid"
-              exit 1
-            fi
+            echo "Failed to install Modelica 3.2.3"
+            exit 1
           fi
+          # Verify library directory
+          ls -l /home/runner/.openmodelica/libraries/ > library_contents.txt
+          cat library_contents.txt
           # Verify Modelica library availability
           export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
           omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica > modelica_paths.txt 2>&1
@@ -91,6 +85,7 @@ jobs:
             omlib_list.txt
             modelica_paths.txt
             install_modelica.log
+            library_contents.txt
             model_check.log
             fmu_build.log
 
