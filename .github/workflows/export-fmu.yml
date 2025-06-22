@@ -55,7 +55,8 @@ jobs:
           cat library_contents.txt
           # Verify Modelica library availability
           export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
-          omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica > modelica_paths.txt 2>&1
+          echo "MODELICAPATH=$MODELICAPATH" >> modelica_paths.txt
+          omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica >> modelica_paths.txt 2>&1
           cat modelica_paths.txt
 
       - name: Verify installation and build FMU
