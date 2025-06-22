@@ -19,67 +19,70 @@ jobs:
 
       - name: Add OpenModelica repository
         run: |
-          # Add OpenModelica GPG key
           wget -q http://build.openmodelica.org/apt/openmodelica.asc -O - | sudo gpg --dearmor -o /usr/share/keyrings/openmodelica-keyring.gpg
-          # Add OpenModelica stable repository for Ubuntu 22.04
           echo "deb [signed-by=/usr/share/keyrings/openmodelica-keyring.gpg] http://build.openmodelica.org/apt jammy stable" | sudo tee /etc/apt/sources.list.d/openmodelica.list
           sudo apt-get update
 
       - name: Install OpenModelica
         run: |
           sudo apt-get install -y openmodelica
-          # Check available Modelica libraries
           apt-cache search omlib > omlib_list.txt
           cat omlib_list.txt
-          # Install all available OpenModelica libraries
           sudo apt-get install -y 'omlib-*' || echo "Some libraries may not be available, proceeding..."
 
       - name: Install Modelica Standard Library
         continue-on-error: true
         run: |
           echo "Starting Modelica library installation"
-          # Create library directory
           mkdir -p /home/runner/.openmodelica/libraries
-          # Install Modelica 3.2.3 using omc
           echo 'installPackage(Modelica, "3.2.3", exactMatch=true);' > install_modelica.mos
           omc +showErrorMessages install_modelica.mos > install_modelica.log 2>&1 || true
           cat install_modelica.log
-          # Check if installation was successful
           if grep -q "true" install_modelica.log; then
             echo "Modelica 3.2.3 installed successfully"
           else
             echo "Failed to install Modelica 3.2.3"
             exit 1
           fi
-          # Verify library directory
           ls -l /home/runner/.openmodelica/libraries/ > library_contents.txt
           cat library_contents.txt
-          # Verify Modelica library availability
           export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
           echo "MODELICAPATH=$MODELICAPATH" > modelica_paths.txt
-          omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica >> modelica_paths.txt 2>&1
+          omc +showErrorMessages -d=infoXmlOperations Modelica >> modelica_paths.txt 2>&1
           cat modelica_paths.txt
           echo "Completed Modelica library installation"
 
       - name: Verify installation and build FMU
         run: |
           echo "Starting model validation and FMU generation"
-          # Verify OpenModelica installation
           which omc
           omc --version
-          # Set MODELICAPATH
           export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
           echo "MODELICAPATH=$MODELICAPATH"
-          # Ensure the .mo file exists
-          ls -l GridTiedMicrogridRLC.mo || echo "Model file not found"
-          # Validate model file
-          omc +showErrorMessages GridTiedMicrogridRLC.mo > model_check.log 2>&1 || echo "Model validation failed, see model_check.log"
+          if [ ! -f GridTiedMicrogridRLC.mo ]; then
+            echo "Error: GridTiedMicrogridRLC.mo not found"
+            exit 1
+          fi
+          ls -l GridTiedMicrogridRLC.mo
+          omc +showErrorMessages GridTiedMicrogridRLC.mo > model_check.log 2>&1
           cat model_check.log
-          # Build FMU with detailed logging
-          omc -f GridTiedMicrogridRLC.fmu +showErrorMessages GridTiedMicrogridRLC.mo > fmu_build.log 2>&1 || echo "FMU generation failed, see fmu_build.log"
+          if grep -q "Error" model_check.log; then
+            echo "Validation errors detected, see model_check.log"
+            exit 1
+          fi
+          omc -f GridTiedMicrogridRLC.fmu +showErrorMessages GridTiedMicrogridRLC.mo > fmu_build.log 2>&1
           cat fmu_build.log
-          # Verify FMU was created
-          ls -l GridTiedMicrogridRLC.fmu || echo "FMU file not found"
+          if grep -q "Error" fmu_build.log; then
+            echo "FMU generation errors detected, see fmu_build.log"
+            exit 1
+          fi
+          if [ -f GridTiedMicrogridRLC.fmu ]; then
+            echo "FMU generated successfully"
+            ls -l GridTiedMicrogridRLC.fmu
+          else
+            echo "Error: FMU file not found"
+            exit 1
+          fi
           echo "Completed model validation and FMU generation"
 
       - name: Upload logs for debugging
