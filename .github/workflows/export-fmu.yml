@@ -39,21 +39,17 @@ jobs:
         run: |
           # Create library directory
           mkdir -p /home/runner/.openmodelica/libraries
-          # Try installing Modelica 3.2.3 using omc
+          # Install Modelica 3.2.3 using omc
           echo 'installPackage(Modelica, "3.2.3", exactMatch=true);' > install_modelica.mos
-          omc --silent +showErrorMessages install_modelica.mos > install_modelica.log 2>&1 || echo "Failed to install Modelica 3.2.3, trying fallback"
+          omc +showErrorMessages install_modelica.mos > install_modelica.log 2>&1 || true
           cat install_modelica.log
-          # Fallback: Try installing default Modelica version
-          if ! grep -q "true" install_modelica.log; then
-            echo 'installPackage(Modelica);' > install_modelica_default.mos
-            omc --silent +showErrorMessages install_modelica_default.mos >> install_modelica.log 2>&1 || echo "Failed to install default Modelica version"
-            cat install_modelica.log
-          fi
-          # Fallback: Manually download Modelica 3.2.3
-          if ! grep -q "true" install_modelica.log; then
-            echo "Manually downloading Modelica 3.2.3"
+          # Check if installation was successful
+          if grep -q "true" install_modelica.log; then
+            echo "Modelica 3.2.3 installed successfully"
+          else
+            echo "Failed to install Modelica 3.2.3, trying fallback"
+            # Fallback: Manually download Modelica 3.2.3
             curl -L -o modelica-3.2.3.zip https://github.com/modelica/ModelicaStandardLibrary/releases/download/v3.2.3/Modelica%203.2.3.zip
-            # Verify download
             if [ -s modelica-3.2.3.zip ]; then
               unzip modelica-3.2.3.zip -d /home/runner/.openmodelica/libraries/
               mv /home/runner/.openmodelica/libraries/Modelica\ 3.2.3 /home/runner/.openmodelica/libraries/Modelica
@@ -64,6 +60,7 @@ jobs:
             fi
           fi
           # Verify Modelica library availability
+          export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
           omc +showErrorMessages -d=infoXmlOperations --version=3.2.3 Modelica > modelica_paths.txt 2>&1
           cat modelica_paths.txt
 
@@ -72,6 +69,8 @@ jobs:
           # Verify OpenModelica installation
           which omc
           omc --version
+          # Set MODELICAPATH
+          export MODELICAPATH=/home/runner/.openmodelica/libraries:$MODELICAPATH
           # Ensure the .mo file exists
           ls -l GridTiedMicrogridRLC.mo
           # Validate model file
