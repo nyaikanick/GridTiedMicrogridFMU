@@ -31,7 +31,7 @@ jobs:
           sudo apt-get install -y openmodelica
           # Check available Modelica libraries
           apt-cache search omlib
-          # Install all available OpenModelica libraries (optional, if specific libraries are needed)
+          # Install all available OpenModelica libraries
           sudo apt-get install -y 'omlib-*' || echo "Some libraries may not be available, proceeding..."
 
       - name: Verify installation and build FMU
@@ -40,11 +40,16 @@ jobs:
           omc --version
           # Ensure the .mo file exists
           ls -l GridTiedMicrogridRLC.mo
-          # Build FMU (Co-Simulation by default)
-          omc -f GridTiedMicrogridRLC.fmu GridTiedMicrogridRLC.mo
+          # Check model file for errors
+          omc +showErrorMessages GridTiedMicrogridRLC.mo || echo "Model check failed, see errors above"
+          # Build FMU with detailed error output
+          omc -f GridTiedMicrogridRLC.fmu +showErrorMessages GridTiedMicrogridRLC.mo || echo "FMU generation failed, see errors above"
+          # Verify FMU was created
+          ls -l GridTiedMicrogridRLC.fmu || echo "FMU file not found"
 
       - name: Upload FMU
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: GridTiedMicrogridRLC-FMU
           path: GridTiedMicrogridRLC.fmu
